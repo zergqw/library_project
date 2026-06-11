@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block title %}Каталог книг | Библиотечная система{% endblock %}
+
+{% block content %}
+<section class="glass-panel p-4 p-lg-5 mb-4">
+    <div class="page-header mb-4">
+        <div>
+            <h1 class="section-title mb-1">Каталог изданий</h1>
+            <p class="text-secondary mb-0">Ищите книги по названию и уточняйте подборку по автору и жанру.</p>
+        </div>
+        <span class="badge badge-soft">{{ books|length }} книг найдено</span>
+    </div>
+
+    <form method="get" class="row g-3 align-items-end">
+        <div class="col-lg-4">
+            <label for="search-query" class="form-label">Поиск по названию</label>
+            <input
+                id="search-query"
+                type="search"
+                name="q"
+                value="{{ search_query }}"
+                class="form-control"
+                placeholder="Введите название книги"
+                aria-label="Поиск по названию"
+            >
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <label for="author-filter" class="form-label">Автор</label>
+            <select id="author-filter" name="author" class="form-select">
+                <option value="">Все авторы</option>
+                {% for author in authors %}
+                <option value="{{ author.id }}" {% if selected_author == author.id|stringformat:"s" %}selected{% endif %}>
+                    {{ author.last_name }} {{ author.first_name }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <label for="genre-filter" class="form-label">Жанр</label>
+            <select id="genre-filter" name="genre" class="form-select">
+                <option value="">Все жанры</option>
+                {% for genre in genres %}
+                <option value="{{ genre.id }}" {% if selected_genre == genre.id|stringformat:"s" %}selected{% endif %}>
+                    {{ genre.name }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-lg-2 d-flex gap-2">
+            <button type="submit" class="btn btn-primary w-100">Применить</button>
+            <a href="{% url 'catalog:book_list' %}" class="btn btn-outline-secondary">Сбросить</a>
+        </div>
+    </form>
+    {% if search_query or selected_author or selected_genre %}
+    <p class="text-secondary mt-3 mb-0">Фильтры применены. Ниже показаны только подходящие издания.</p>
+    {% endif %}
+</section>
+
+<div class="row g-4">
+    {% for book in books %}
+    <div class="col-md-6 col-xl-4">
+        <div class="card h-100">
+            {% if book.cover %}
+            <img src="{{ book.cover.url }}" class="card-img-top" alt="Обложка {{ book.title }}" style="height: 320px; object-fit: cover;">
+            {% else %}
+            <div class="cover-placeholder">Без обложки</div>
+            {% endif %}
+            <div class="card-body">
+                <div class="d-flex justify-content-between gap-3 mb-2">
+                    <h2 class="h5 card-title mb-0">{{ book.title }}</h2>
+                    {% if book.year %}
+                    <span class="badge text-bg-light">{{ book.year }}</span>
+                    {% endif %}
+                </div>
+                <p class="text-secondary small mb-2">Автор: {{ book.author }}</p>
+                <p class="card-text">{{ book.summary|truncatechars:120 }}</p>
+            </div>
+            <div class="card-footer bg-transparent border-0 pt-0 pb-4 px-3">
+                <a href="{% url 'catalog:book_detail' book.id %}" class="btn btn-primary btn-sm">Подробнее</a>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <div class="empty-state">По выбранным условиям книги не найдены.</div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

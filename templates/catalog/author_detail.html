@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}{{ author.first_name }} {{ author.last_name }} | Библиотечная система{% endblock %}
+
+{% block content %}
+<section class="glass-panel p-4 p-lg-5 mb-4">
+    <div class="page-header">
+        <div>
+            <h1 class="section-title mb-2">{{ author.first_name }} {{ author.last_name }}</h1>
+            <p class="text-secondary mb-0">Дата рождения: {{ author.date_of_birth|default:"нет данных" }}</p>
+        </div>
+        <a href="{% url 'catalog:author_list' %}" class="btn btn-outline-secondary">Все авторы</a>
+    </div>
+</section>
+
+<section>
+    <h2 class="section-title h3 mb-4">Книги автора</h2>
+    <div class="row g-4">
+        {% for book in author.book_set.all %}
+        <div class="col-md-6">
+            <div class="card h-100">
+                {% if book.cover %}
+                <img src="{{ book.cover.url }}" class="card-img-top" alt="Обложка {{ book.title }}" style="height: 260px; object-fit: cover;">
+                {% else %}
+                <div class="cover-placeholder">Без обложки</div>
+                {% endif %}
+                <div class="card-body">
+                    <div class="d-flex justify-content-between gap-3 mb-2">
+                        <h3 class="h5 card-title mb-0">{{ book.title }}</h3>
+                        {% if book.year %}
+                        <span class="badge text-bg-light">{{ book.year }}</span>
+                        {% endif %}
+                    </div>
+                    <p class="card-text text-secondary">{{ book.summary|truncatechars:150 }}</p>
+                </div>
+                <div class="card-footer bg-transparent border-0 pt-0 pb-4 px-3">
+                    <a href="{% url 'catalog:book_detail' book.id %}" class="btn btn-primary btn-sm">Открыть книгу</a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="empty-state">У этого автора пока нет книг в каталоге.</div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}

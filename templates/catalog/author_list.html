@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block title %}Авторы | Библиотечная система{% endblock %}
+
+{% block content %}
+<section class="glass-panel p-4 p-lg-5">
+    <div class="page-header mb-4">
+        <div>
+            <h1 class="section-title mb-1">Авторы</h1>
+            <p class="text-secondary mb-0">Выберите автора и перейдите к его книгам в каталоге.</p>
+        </div>
+        <span class="badge badge-soft">{{ authors|length }} авторов</span>
+    </div>
+
+    <div class="list-group">
+        {% for author in authors %}
+        <a href="{% url 'catalog:author_detail' author.id %}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center py-3">
+            <div>
+                <h2 class="h5 mb-1">{{ author.last_name }} {{ author.first_name }}</h2>
+                <small class="text-muted">Книг в каталоге: {{ author.book_set.count }}</small>
+            </div>
+            <span class="btn btn-sm btn-outline-secondary">Открыть</span>
+        </a>
+        {% empty %}
+        <div class="empty-state">Авторы пока не добавлены.</div>
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}

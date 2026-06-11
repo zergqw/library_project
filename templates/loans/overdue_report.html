@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}Просрочки | Библиотечная система{% endblock %}
+
+{% block content %}
+<section class="glass-panel p-4 p-lg-5">
+    <div class="page-header mb-4">
+        <div>
+            <h1 class="section-title mb-1">{{ title }}</h1>
+            <p class="text-secondary mb-0">Список выдач, срок возврата по которым уже истек.</p>
+        </div>
+        <span class="badge bg-danger fs-6">{{ loans|length }} просроченных</span>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>Книга</th>
+                    <th>Читатель</th>
+                    <th>Инв. номер</th>
+                    <th>Дата выдачи</th>
+                    <th>Вернуть до</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for loan in loans %}
+                <tr>
+                    <td>{{ loan.book_instance.book.title }}</td>
+                    <td>{{ loan.reader.user.get_full_name|default:loan.reader.user.username }}</td>
+                    <td>{{ loan.book_instance.inv_number }}</td>
+                    <td>{{ loan.loan_date|date:"d.m.Y" }}</td>
+                    <td class="text-danger fw-semibold">{{ loan.return_date|date:"d.m.Y" }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="text-center text-muted py-4">Просроченных книг нет.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}

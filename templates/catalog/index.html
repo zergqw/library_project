@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block title %}Главная | Библиотечная система{% endblock %}
+
+{% block content %}
+<section class="hero-grid mb-5">
+    <div class="glass-panel p-4 p-lg-5">
+        <span class="eyebrow mb-3">Информационная система библиотеки</span>
+        <h1 class="display-5 fw-bold mb-3">Каталог, читатели и выдачи в одном удобном интерфейсе</h1>
+        <p class="lead text-secondary mb-4">
+            Просматривайте книги, отслеживайте экземпляры, работайте с выдачами и быстро находите нужное издание
+            по автору, жанру или названию.
+        </p>
+        <div class="d-flex flex-wrap gap-2">
+            <a href="{% url 'catalog:book_list' %}" class="btn btn-primary btn-lg">Открыть каталог</a>
+            <a href="{% url 'catalog:author_list' %}" class="btn btn-outline-secondary btn-lg">Посмотреть авторов</a>
+        </div>
+    </div>
+
+    <div class="glass-panel p-4">
+        <div class="page-header mb-3">
+            <div>
+                <h2 class="section-title h4 mb-1">Состояние фонда</h2>
+                <p class="text-secondary mb-0">Короткий срез по библиотечному каталогу.</p>
+            </div>
+            <span class="badge badge-soft">Актуально сейчас</span>
+        </div>
+        <div class="row g-3">
+            <div class="col-6">
+                <div class="stat-card h-100">
+                    <div class="stat-label">Книги</div>
+                    <div class="stat-value">{{ num_books }}</div>
+                </div>
+            </div>
+            <div class="col-6">
+                <div class="stat-card h-100">
+                    <div class="stat-label">Экземпляры</div>
+                    <div class="stat-value">{{ num_instances }}</div>
+                </div>
+            </div>
+            <div class="col-6">
+                <div class="stat-card h-100">
+                    <div class="stat-label">Доступно</div>
+                    <div class="stat-value">{{ num_available_instances }}</div>
+                </div>
+            </div>
+            <div class="col-6">
+                <div class="stat-card h-100">
+                    <div class="stat-label">Авторы</div>
+                    <div class="stat-value">{{ num_authors }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="glass-panel p-4 p-lg-5">
+    <div class="page-header mb-4">
+        <div>
+            <h2 class="section-title h3 mb-1">Последние добавленные книги</h2>
+            <p class="text-secondary mb-0">Небольшая подборка из каталога для быстрого перехода.</p>
+        </div>
+        <a href="{% url 'catalog:book_list' %}" class="btn btn-outline-secondary">Весь каталог</a>
+    </div>
+    <div class="row g-4">
+        {% for book in latest_books %}
+        <div class="col-md-4">
+            <div class="card h-100">
+                {% if book.cover %}
+                <img src="{{ book.cover.url }}" class="card-img-top" alt="Обложка {{ book.title }}" style="height: 280px; object-fit: cover;">
+                {% else %}
+                <div class="cover-placeholder">Без обложки</div>
+                {% endif %}
+                <div class="card-body">
+                    <h3 class="h5 card-title">{{ book.title }}</h3>
+                    <p class="text-secondary small mb-2">{{ book.author }}</p>
+                    <p class="card-text">{{ book.summary|truncatechars:120 }}</p>
+                </div>
+                <div class="card-footer bg-transparent border-0 pt-0 pb-4 px-3">
+                    <a href="{% url 'catalog:book_detail' book.id %}" class="btn btn-primary btn-sm">Открыть книгу</a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="empty-state">В каталоге пока нет добавленных книг.</div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block title %}{{ book.title }} | Библиотечная система{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb" class="mb-4">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="{% url 'catalog:book_list' %}">Каталог</a></li>
+    <li class="breadcrumb-item active">{{ book.title }}</li>
+  </ol>
+</nav>
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="glass-panel p-4 p-lg-5 h-100">
+            <div class="row g-4 align-items-start">
+                {% if book.cover %}
+                <div class="col-md-4">
+                    <img
+                        src="{{ book.cover.url }}"
+                        alt="Обложка книги {{ book.title }}"
+                        class="img-fluid rounded-4 shadow-sm"
+                    >
+                </div>
+                <div class="col-md-8">
+                {% else %}
+                <div class="col-md-4">
+                    <div class="cover-placeholder rounded-4 h-100">Нет обложки</div>
+                </div>
+                <div class="col-md-8">
+                {% endif %}
+                    <div class="d-flex flex-wrap gap-2 mb-3">
+                        {% if book.year %}
+                        <span class="badge text-bg-light">{{ book.year }}</span>
+                        {% endif %}
+                        {% for g in book.genre.all %}
+                        <span class="badge text-bg-secondary">{{ g.name }}</span>
+                        {% endfor %}
+                    </div>
+                    <h1 class="section-title mb-3">{{ book.title }}</h1>
+                    <p class="lead mb-3">
+                        <strong>Автор:</strong>
+                        <a href="{% url 'catalog:author_detail' book.author.id %}" class="text-decoration-none">{{ book.author }}</a>
+                    </p>
+                    <dl class="row info-pair mb-4">
+                        <dt class="col-sm-4">ISBN</dt>
+                        <dd class="col-sm-8">{{ book.isbn }}</dd>
+                        <dt class="col-sm-4">Жанры</dt>
+                        <dd class="col-sm-8">
+                            {% for g in book.genre.all %}
+                            {{ g.name }}{% if not forloop.last %}, {% endif %}
+                            {% empty %}
+                            Не указаны
+                            {% endfor %}
+                        </dd>
+                    </dl>
+                    <p class="text-secondary mb-0">{{ book.summary }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card h-100">
+            <div class="card-header bg-primary text-white py-3">
+                Экземпляры и доступность
+            </div>
+            <ul class="list-group list-group-flush">
+                {% for copy in instances %}
+                <li class="list-group-item d-flex justify-content-between align-items-center gap-3 py-3">
+                    <div>
+                        <small class="text-muted d-block">Инв. номер: {{ copy.inv_number }}</small>
+                        <span class="badge {% if copy.status == 'a' %}bg-success{% else %}bg-secondary{% endif %}">
+                            {{ copy.get_status_display }}
+                        </span>
+                    </div>
+                    {% if copy.status == 'a' %}
+                    <form action="{% url 'loans:borrow_book' copy.pk %}" method="post" class="d-inline">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-primary btn-sm">Взять</button>
+                    </form>
+                    {% elif user.is_staff %}
+                    <form action="{% url 'loans:return_book' copy.pk %}" method="post" class="d-inline">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-outline-secondary btn-sm">Принять возврат</button>
+                    </form>
+                    {% else %}
+                    <span class="text-muted small">Недоступен</span>
+                    {% endif %}
+                </li>
+                {% empty %}
+                <li class="list-group-item text-danger py-4">Нет физических экземпляров.</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

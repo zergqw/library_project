@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block title %}Личный кабинет | Библиотечная система{% endblock %}
+
+{% block content %}
+<section class="glass-panel p-4 p-lg-5 mb-4">
+    <div class="page-header">
+        <div>
+            <span class="eyebrow mb-3">Профиль читателя</span>
+            <h1 class="section-title mb-2">Личный кабинет</h1>
+            <p class="mb-1"><strong>Читатель:</strong> {{ reader.user.get_full_name|default:reader.user.username }}</p>
+            <p class="mb-1 text-secondary"><strong>Номер билета:</strong> {{ reader.ticket_number }}</p>
+            <p class="mb-0 text-secondary"><strong>Телефон:</strong> {{ reader.phone }}</p>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Активные книги</div>
+            <div class="stat-value">{{ active_loans|length }}</div>
+        </div>
+    </div>
+</section>
+
+<section class="mb-5">
+    <h2 class="section-title h3 mb-4">Книги на руках</h2>
+    <div class="row g-4">
+        {% for loan_item in active_loans %}
+        <div class="col-md-6">
+            <div class="card h-100 {% if loan_item.is_overdue %}border-danger{% else %}border-primary{% endif %}">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start gap-3">
+                        <h3 class="h5 card-title mb-0">{{ loan_item.book_instance.book.title }}</h3>
+                        {% if loan_item.is_overdue %}
+                        <span class="badge bg-danger">Просрочена</span>
+                        {% else %}
+                        <span class="badge bg-primary">Активна</span>
+                        {% endif %}
+                    </div>
+                    <p class="text-secondary mt-3 mb-2">
+                        Взято: {{ loan_item.loan_date|date:"d.m.Y" }}<br>
+                        Вернуть до: <strong>{{ loan_item.return_date|date:"d.m.Y" }}</strong>
+                    </p>
+                    {% if loan_item.is_overdue %}
+                    <p class="text-danger small mb-3">Срок возврата уже истек. Пожалуйста, верните книгу в библиотеку.</p>
+                    {% endif %}
+                </div>
+                <div class="card-footer bg-transparent border-0 pt-0 pb-4 px-3">
+                    <a href="{% url 'catalog:book_detail' loan_item.book_instance.book.id %}" class="btn btn-outline-primary btn-sm">Открыть книгу</a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="empty-state">У вас пока нет взятых книг.</div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+
+<section>
+    <h2 class="section-title h3 mb-4">История выдач</h2>
+    <div class="row g-4">
+        {% for loan_item in loan_history %}
+        <div class="col-md-6">
+            <div class="card h-100 border-success">
+                <div class="card-body">
+                    <h3 class="h5 card-title">{{ loan_item.book_instance.book.title }}</h3>
+                    <p class="text-secondary mb-0">
+                        Взято: {{ loan_item.loan_date|date:"d.m.Y" }}<br>
+                        Возвращено: {{ loan_item.actual_return_date|date:"d.m.Y" }}
+                    </p>
+                </div>
+                <div class="card-footer d-flex justify-content-between align-items-center bg-transparent border-0 pt-0 pb-4 px-3">
+                    <span class="badge bg-success">Возвращена</span>
+                    <a href="{% url 'catalog:book_detail' loan_item.book_instance.book.id %}" class="btn btn-outline-secondary btn-sm">Открыть книгу</a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="empty-state">В истории пока нет возвращенных книг.</div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}
