@@ -1,38 +1,21 @@
 # Library Project
 
-Веб-приложение библиотеки на Django для учета книг, читателей и выдач.
-
-Техническое задание под фактическую реализацию проекта находится в
-[`docs/technical_specification.md`](docs/technical_specification.md).
-
-Дополнительные материалы для диплома:
-
-- [`docs/functional_audit.md`](docs/functional_audit.md) - соответствие проекта требованиям;
-- [`docs/testing_plan.md`](docs/testing_plan.md) - план и результаты тестирования;
-- [`docs/diploma_materials.md`](docs/diploma_materials.md) - архитектура, модель данных, маршруты и материалы для пояснительной записки;
-- [`docs/explanatory_note_draft.md`](docs/explanatory_note_draft.md) - текстовый черновик пояснительной записки;
-- [`docs/final_checklist.md`](docs/final_checklist.md) - чек-лист перед защитой;
-- [`docs/presentation_outline.md`](docs/presentation_outline.md) - план презентации;
-- [`docs/five_minute_speech.md`](docs/five_minute_speech.md) - текст доклада на 5 минут;
-- [`docs/user_manual.md`](docs/user_manual.md) - руководство пользователя;
-- [`docs/presentation.html`](docs/presentation.html) - HTML-презентация;
-- [`docs/presentation.pdf`](docs/presentation.pdf) - PDF-версия презентации;
-- [`docs/screenshots/`](docs/screenshots/) - скриншоты интерфейса.
+Веб-приложение библиотеки на Django. Проект позволяет вести каталог книг,
+авторов и жанров, регистрировать читателей, оформлять выдачу и возврат
+экземпляров, а также смотреть отчеты по книгам на руках и просроченным выдачам.
 
 ## Возможности
 
-- просмотр каталога книг и списка авторов;
-- поиск книг по названию;
-- фильтрация каталога по автору и жанру;
-- просмотр детальной страницы книги;
-- отображение года издания и обложки книги;
+- каталог книг с поиском и фильтрацией по автору и жанру;
+- страницы книг и авторов;
+- хранение года издания, ISBN и обложек книг;
 - регистрация, вход и личный кабинет читателя;
-- выдача и возврат экземпляров книг;
-- отображение просроченных книг в кабинете читателя;
-- отчеты для библиотекаря:
-  - книги на руках;
-  - просроченные книги;
-- управление данными через Django Admin.
+- оформление выдачи доступного экземпляра;
+- возврат книг сотрудником библиотеки;
+- отметка активных и просроченных выдач;
+- отчеты для библиотекаря;
+- управление данными через Django Admin;
+- команды для генерации демонстрационных данных и обложек.
 
 ## Стек
 
@@ -41,47 +24,24 @@
 - SQLite
 - Pillow
 - Bootstrap 5
+- uv, опционально
 
 ## Быстрый старт
 
-### Вариант 1. Через `make`
+Рекомендуемый вариант запуска:
 
-Из корня проекта:
-
-```bash
-make install
-make migrate
-make run
+```powershell
+uv run --python 3.11 manage.py migrate
+uv run --python 3.11 manage.py runserver
 ```
 
-Если команда `make` недоступна в Windows PowerShell, используйте ручной запуск или вариант через `uv`.
-
-После запуска приложение будет доступно по адресу:
+После запуска приложение доступно по адресу:
 
 ```text
 http://127.0.0.1:8000/
 ```
 
-### Вариант 2. Вручную
-
-Linux / WSL:
-
-```bash
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-python manage.py migrate
-python manage.py runserver
-```
-
-### Вариант 3. Через `uv`
-
-```bash
-uv run --python 3.11 manage.py migrate
-uv run --python 3.11 manage.py runserver
-```
-
-Windows PowerShell:
+Если `uv` не установлен, можно использовать обычное виртуальное окружение:
 
 ```powershell
 python -m venv venv
@@ -91,117 +51,181 @@ python manage.py migrate
 python manage.py runserver
 ```
 
-## Полезные команды
+На Linux / WSL:
 
 ```bash
-make superuser
-make test
-make check
-make shell
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+python manage.py migrate
+python manage.py runserver
 ```
 
-Эквиваленты без `make`:
+## Настройки окружения
 
-```bash
-python manage.py createsuperuser
-python manage.py test
+В репозитории есть файл `.env.example` с примером переменных:
+
+```env
+DJANGO_SECRET_KEY=change-me-generate-a-long-random-secret-key
+DJANGO_DEBUG=True
+DJANGO_ALLOWED_HOSTS=127.0.0.1,localhost
+```
+
+Для локальной разработки проект запускается и без переменных окружения:
+используется безопасный для разработки fallback-ключ и `DEBUG=True`.
+
+Для публикации или деплоя задайте переменные окружения вручную. Пример для
+PowerShell:
+
+```powershell
+$env:DJANGO_SECRET_KEY="your-long-random-secret-key"
+$env:DJANGO_DEBUG="False"
+$env:DJANGO_ALLOWED_HOSTS="example.com,127.0.0.1,localhost"
+```
+
+Настоящий `.env` игнорируется Git. В репозиторий должен попадать только
+`.env.example`.
+
+## Демо-данные
+
+База `db.sqlite3` и папка `media/` не хранятся в Git. После клонирования проекта
+их можно восстановить командами:
+
+```powershell
+uv run --python 3.11 manage.py migrate
+uv run --python 3.11 manage.py seed_demo_data
+uv run --python 3.11 manage.py apply_online_covers
+```
+
+`seed_demo_data` создает жанры, авторов, книги, экземпляры, читателей и выдачи.
+Также генерирует локальные обложки через Pillow.
+
+`apply_online_covers` скачивает открытые тематические изображения из интернета,
+обрабатывает их под формат обложек и сохраняет ссылки на источники в:
+
+```text
+media/books/covers/online/sources.json
+```
+
+Для вымышленных demo-книг используются тематические изображения, а не
+официальные обложки.
+
+Демо-пользователи:
+
+```text
+demo.reader1 ... demo.reader6
+password: demo12345
+```
+
+Сотрудник библиотеки:
+
+```text
+demo.librarian
+password: demo12345
+```
+
+## Полезные команды
+
+Через `uv`:
+
+```powershell
+uv run --python 3.11 manage.py check
+uv run --python 3.11 manage.py test
+uv run --python 3.11 manage.py createsuperuser
+uv run --python 3.11 manage.py shell
+```
+
+Через активированное виртуальное окружение:
+
+```powershell
 python manage.py check
+python manage.py test
+python manage.py createsuperuser
 python manage.py shell
 ```
 
-## Роли в системе
+В проекте также есть `Makefile`:
 
-### Читатель
+```bash
+make install
+make migrate
+make run
+make test
+make check
+```
 
-- просмотр каталога;
-- поиск и фильтрация книг;
-- регистрация и вход;
-- просмотр личного кабинета;
-- просмотр активных и завершенных выдач;
-- получение предупреждения о просрочке;
-- оформление выдачи доступного экземпляра.
-
-### Библиотекарь
-
-- доступ в Django Admin;
-- возврат книг;
-- просмотр отчетов по книгам на руках;
-- просмотр отчета по просроченным книгам.
+На Windows удобнее использовать команды через `uv` или PowerShell-вариант с
+виртуальным окружением.
 
 ## Основные разделы
 
-- `/catalog/` — главная страница каталога;
-- `/catalog/books/` — список книг;
-- `/catalog/authors/` — список авторов;
-- `/profile/` — личный кабинет читателя;
-- `/loans/reports/on-loan/` — книги на руках, только для staff;
-- `/loans/reports/overdue/` — просроченные книги, только для staff;
-- `/admin/` — административная панель Django.
+- `/catalog/` - главная страница каталога;
+- `/catalog/books/` - список книг;
+- `/catalog/books/<id>/` - страница книги;
+- `/catalog/authors/` - список авторов;
+- `/catalog/authors/<id>/` - страница автора;
+- `/signup/` - регистрация читателя;
+- `/accounts/login/` - вход;
+- `/profile/` - личный кабинет;
+- `/loans/reports/on-loan/` - отчет по книгам на руках;
+- `/loans/reports/overdue/` - отчет по просроченным книгам;
+- `/admin/` - административная панель Django.
 
 ## Структура проекта
 
 ```text
 library_project/
-├── apps/
-│   ├── catalog/   # книги, авторы, жанры, экземпляры
-│   ├── loans/     # выдача, возврат, отчеты
-│   └── users/     # регистрация и профиль читателя
-├── core/          # настройки и корневые маршруты
-├── templates/     # HTML-шаблоны
-├── media/         # загружаемые файлы, включая обложки
-├── static/        # статические файлы
-├── manage.py
-├── Makefile
-└── requirements.txt
+|-- apps/
+|   |-- catalog/   # книги, авторы, жанры, экземпляры
+|   |-- loans/     # выдачи, возвраты, отчеты
+|   `-- users/     # регистрация и профиль читателя
+|-- core/          # настройки и корневые маршруты
+|-- templates/     # HTML-шаблоны
+|-- media/         # загружаемые файлы, игнорируется Git
+|-- static/        # статические файлы проекта
+|-- manage.py
+|-- Makefile
+|-- pyproject.toml
+`-- requirements.txt
 ```
+
+## Git и файлы вне репозитория
+
+В `.gitignore` вынесены локальные и генерируемые файлы:
+
+- `db.sqlite3`;
+- `media/`;
+- `docs/`;
+- `.env`;
+- `.venv/`, `venv/`;
+- `__pycache__/` и кеши инструментов.
+
+Это значит, что на GitHub попадает код проекта, шаблон настроек и команды для
+восстановления локальных данных, но не сама база, медиафайлы и черновые
+материалы.
 
 ## Тестирование
 
-Проект покрыт тестами для:
+Запуск тестов:
 
-- поиска и фильтрации каталога;
-- регистрации читателя;
-- выдачи и возврата книг;
-- отображения профиля читателя;
-- просроченных выдач;
-- отчетов библиотекаря;
-- защиты от двух активных выдач одного экземпляра.
-
-Запуск:
-
-```bash
-make test
+```powershell
+uv run --python 3.11 manage.py test
 ```
 
-или
+или:
 
-```bash
+```powershell
 python manage.py test
 ```
 
-Текущий проверенный результат:
-
-```text
-27 tests passed
-```
-
-## Сборка материалов диплома
-
-Word-черновик пояснительной записки можно пересобрать из Markdown и скриншотов:
+Быстрая проверка конфигурации:
 
 ```powershell
-$script = [System.IO.File]::ReadAllText('docs\build_explanatory_note.ps1', [System.Text.Encoding]::UTF8)
-& ([scriptblock]::Create($script))
+uv run --python 3.11 manage.py check
 ```
 
-Скрипт обновляет файл `docs/Пояснительная записка - черновик.docx`, добавляет обновляемое содержание и встраивает скриншоты из `docs/screenshots/`.
+## Примечания
 
-## Медиафайлы
-
-Обложки книг сохраняются в папке `media/books/covers/`.
-
-В режиме разработки Django раздает медиа автоматически при `DEBUG = True`.
-
-## Примечание
-
-Для работы загрузки обложек и `ImageField` в зависимостях используется `Pillow`.
+- Для работы `ImageField` и генерации обложек используется Pillow.
+- Команда `apply_online_covers` требует доступ в интернет.
+- При `DJANGO_DEBUG=False` переменная `DJANGO_SECRET_KEY` обязательна.
