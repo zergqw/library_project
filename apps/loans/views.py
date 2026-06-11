@@ -4,6 +4,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
 
 from apps.catalog.models import BookInstance
@@ -18,6 +19,20 @@ def _staff_guard(request):
 
     messages.error(request, 'У вас нет прав для просмотра этого раздела.')
     return redirect('catalog:index')
+
+
+def _safe_next_url(request):
+    next_url = request.POST.get('next') or request.GET.get('next')
+    if not next_url:
+        return None
+
+    if url_has_allowed_host_and_scheme(
+        next_url,
+        allowed_hosts={request.get_host()},
+        require_https=request.is_secure(),
+    ):
+        return next_url
+    return None
 
 
 @login_required
@@ -67,6 +82,9 @@ def return_book(request, pk):
 
         if loan is None:
             messages.error(request, 'Для этого экземпляра не найдена активная выдача.')
+            redirect_to = _safe_next_url(request)
+            if redirect_to:
+                return redirect(redirect_to)
             return redirect('catalog:book_detail', pk=book_instance.book.pk)
 
         loan.actual_return_date = date.today()
@@ -76,6 +94,9 @@ def return_book(request, pk):
         book_instance.save(update_fields=['status'])
 
     messages.success(request, f"Книга '{book_instance.book.title}' успешно возвращена.")
+    redirect_to = _safe_next_url(request)
+    if redirect_to:
+        return redirect(redirect_to)
     return redirect('catalog:book_detail', pk=book_instance.book.pk)
 
 

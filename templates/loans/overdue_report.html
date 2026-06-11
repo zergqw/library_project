@@ -21,6 +21,7 @@
                     <th>Инв. номер</th>
                     <th>Дата выдачи</th>
                     <th>Вернуть до</th>
+                    <th class="text-end">Действие</th>
                 </tr>
             </thead>
             <tbody>
@@ -31,10 +32,17 @@
                     <td>{{ loan.book_instance.inv_number }}</td>
                     <td>{{ loan.loan_date|date:"d.m.Y" }}</td>
                     <td class="text-danger fw-semibold">{{ loan.return_date|date:"d.m.Y" }}</td>
+                    <td class="text-end">
+                        <form action="{% url 'loans:return_book' loan.book_instance.pk %}" method="post" class="d-inline">
+                            {% csrf_token %}
+                            <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                            <button type="submit" class="btn btn-outline-secondary btn-sm">Принять возврат</button>
+                        </form>
+                    </td>
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="5" class="text-center text-muted py-4">Просроченных книг нет.</td>
+                    <td colspan="6" class="text-center text-muted py-4">Просроченных книг нет.</td>
                 </tr>
                 {% endfor %}
             </tbody>

@@ -228,3 +228,45 @@ class LoanViewsTests(TestCase):
         response = self.client.get(reverse('loans:overdue_report'))
 
         self.assertRedirects(response, reverse('catalog:index'))
+
+    def test_staff_can_return_book_from_on_loan_report(self):
+        loan = Loan.objects.create(
+            book_instance=self.book_instance,
+            reader=self.reader,
+            return_date=date.today() + timedelta(days=7),
+        )
+        self.book_instance.status = 'o'
+        self.book_instance.save(update_fields=['status'])
+
+        self.client.login(username='librarian', password='pass12345')
+        response = self.client.post(
+            reverse('loans:return_book', args=[self.book_instance.pk]),
+            {'next': reverse('loans:on_loan_report')},
+        )
+
+        self.book_instance.refresh_from_db()
+        loan.refresh_from_db()
+
+        self.assertRedirects(response, reverse('loans:on_loan_report'))
+        self.assertEqual(self.book_instance.status, 'a')
+        self.assertEqual(loan.actual_return_date, date.today())
+
+    def test_return_book_ignores_unsafe_next_url(self):
+        loan = Loan.objects.create(
+            book_instance=self.book_instance,
+            reader=self.reader,
+            return_date=date.today() + timedelta(days=7),
+        )
+        self.book_instance.status = 'o'
+        self.book_instance.save(update_fields=['status'])
+
+        self.client.login(username='librarian', password='pass12345')
+        response = self.client.post(
+            reverse('loans:return_book', args=[self.book_instance.pk]),
+            {'next': 'https://example.com/not-safe'},
+        )
+
+        loan.refresh_from_db()
+
+        self.assertRedirects(response, reverse('catalog:book_detail', args=[self.book.pk]))
+        self.assertEqual(loan.actual_return_date, date.today())
