@@ -1,0 +1,26 @@
+databases:
+  - name: library-project-db
+    plan: free
+    databaseName: library_project
+    user: library_project
+
+services:
+  - type: web
+    name: library-project
+    runtime: python
+    plan: free
+    buildCommand: bash build.sh
+    startCommand: python -m gunicorn core.wsgi:application
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: library-project-db
+          property: connectionString
+      - key: DJANGO_SECRET_KEY
+        generateValue: true
+      - key: DJANGO_DEBUG
+        value: "False"
+      - key: DJANGO_SECURE_HSTS_SECONDS
+        value: "31536000"
+      - key: WEB_CONCURRENCY
+        value: "4"
