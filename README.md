@@ -21,9 +21,11 @@
 
 - Python 3.11+
 - Django 5.2
-- SQLite
+- SQLite локально, PostgreSQL на Render
 - Pillow
 - Bootstrap 5
+- Gunicorn
+- WhiteNoise
 - uv, опционально
 
 ## Быстрый старт
@@ -69,6 +71,13 @@ python manage.py runserver
 DJANGO_SECRET_KEY=change-me-generate-a-long-random-secret-key
 DJANGO_DEBUG=True
 DJANGO_ALLOWED_HOSTS=127.0.0.1,localhost
+DATABASE_URL=
+DJANGO_SECURE_SSL_REDIRECT=True
+DJANGO_SECURE_HSTS_SECONDS=0
+DJANGO_SUPERUSER_USERNAME=admin
+DJANGO_SUPERUSER_EMAIL=admin@example.com
+DJANGO_SUPERUSER_PASSWORD=
+DJANGO_SEED_DEMO_DATA=False
 ```
 
 Для локальной разработки проект запускается и без переменных окружения:
@@ -188,6 +197,49 @@ library_project/
 |-- pyproject.toml
 `-- requirements.txt
 ```
+
+## Деплой на Render
+
+Проект подготовлен к деплою на Render как Django Web Service:
+
+- `render.yaml` описывает web service и PostgreSQL-базу;
+- `build.sh` устанавливает зависимости, собирает static-файлы, применяет миграции и создает администратора;
+- static-файлы собираются в `staticfiles/` и отдаются через WhiteNoise;
+- приложение запускается командой `python -m gunicorn core.wsgi:application`;
+- если `DATABASE_URL` задан, используется PostgreSQL, иначе локально остается SQLite.
+
+Для деплоя через Blueprint:
+
+1. Загрузите проект в GitHub/GitLab.
+2. В Render выберите `New` -> `Blueprint`.
+3. Подключите репозиторий.
+4. При создании сервиса задайте секретный пароль администратора:
+
+```env
+DJANGO_SUPERUSER_PASSWORD=<your-admin-password>
+```
+
+Основные переменные для Render:
+
+```env
+DJANGO_DEBUG=False
+DJANGO_SECRET_KEY=<generated-secret>
+DATABASE_URL=<Render PostgreSQL Internal Database URL>
+DJANGO_SUPERUSER_USERNAME=admin
+DJANGO_SUPERUSER_EMAIL=admin@example.com
+DJANGO_SUPERUSER_PASSWORD=<your-admin-password>
+DJANGO_SEED_DEMO_DATA=True
+```
+
+Если `DJANGO_SEED_DEMO_DATA=True`, во время деплоя автоматически создаются
+демонстрационные книги, читатели и выдачи. Это удобно, если Render Shell
+недоступен на тарифе.
+
+Подробная инструкция находится в файле `DEPLOY_RENDER.md`.
+
+Важно: загружаемые файлы из `media/` не являются надежным постоянным хранилищем
+на бесплатном web service Render. Для дипломной демонстрации этого достаточно,
+но для реального использования лучше подключить Render Disk, S3 или Cloudinary.
 
 ## Git и файлы вне репозитория
 

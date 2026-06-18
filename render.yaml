@@ -22,5 +22,13 @@ services:
         value: "False"
       - key: DJANGO_SECURE_HSTS_SECONDS
         value: "31536000"
+      - key: DJANGO_SUPERUSER_USERNAME
+        value: admin
+      - key: DJANGO_SUPERUSER_EMAIL
+        value: admin@example.com
+      - key: DJANGO_SUPERUSER_PASSWORD
+        sync: false
+      - key: DJANGO_SEED_DEMO_DATA
+        value: "True"
       - key: WEB_CONCURRENCY
         value: "4"

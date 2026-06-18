@@ -31,6 +31,10 @@ DJANGO_DEBUG=False
 DJANGO_SECRET_KEY=<generate value>
 DATABASE_URL=<Internal Database URL from Render PostgreSQL>
 DJANGO_SECURE_HSTS_SECONDS=31536000
+DJANGO_SUPERUSER_USERNAME=admin
+DJANGO_SUPERUSER_EMAIL=admin@example.com
+DJANGO_SUPERUSER_PASSWORD=<your admin password>
+DJANGO_SEED_DEMO_DATA=True
 WEB_CONCURRENCY=4
 ```
 
@@ -42,21 +46,28 @@ WEB_CONCURRENCY=4
 pip install -r requirements.txt
 python manage.py collectstatic --no-input
 python manage.py migrate
+python manage.py ensure_superuser
 ```
 
-## После деплоя
-
-Создать администратора в Render Shell:
-
-```bash
-python manage.py createsuperuser
-```
-
-При необходимости заполнить демонстрационные данные:
+Если `DJANGO_SEED_DEMO_DATA=True`, build дополнительно выполнит:
 
 ```bash
 python manage.py seed_demo_data
 ```
+
+## После деплоя
+
+Если Render Shell недоступен на тарифе, администратор создается автоматически во время build по переменным:
+
+```env
+DJANGO_SUPERUSER_USERNAME
+DJANGO_SUPERUSER_EMAIL
+DJANGO_SUPERUSER_PASSWORD
+```
+
+Если `DJANGO_SUPERUSER_PASSWORD` не задан, команда `ensure_superuser` пропустит создание администратора и деплой не упадет.
+
+Демонстрационные данные создаются автоматически, если задано `DJANGO_SEED_DEMO_DATA=True`.
 
 ## Важно про media
 

@@ -1,6 +1,9 @@
 from datetime import date, timedelta
+from io import StringIO
+from unittest.mock import patch
 
 from django.contrib.auth.models import User
+from django.core.management import call_command
 from django.test import TestCase
 from django.urls import reverse
 
@@ -51,6 +54,38 @@ class ReaderRegistrationTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertFalse(User.objects.filter(username='new_reader').exists())
         self.assertFalse(Reader.objects.exists())
+
+
+class EnsureSuperuserCommandTests(TestCase):
+    def test_command_skips_creation_without_password(self):
+        out = StringIO()
+
+        with patch.dict('os.environ', {}, clear=True):
+            call_command('ensure_superuser', stdout=out)
+
+        self.assertFalse(User.objects.filter(username='admin').exists())
+        self.assertIn('Superuser creation skipped', out.getvalue())
+
+    def test_command_creates_superuser_from_environment(self):
+        out = StringIO()
+
+        with patch.dict(
+            'os.environ',
+            {
+                'DJANGO_SUPERUSER_USERNAME': 'render-admin',
+                'DJANGO_SUPERUSER_EMAIL': 'render-admin@example.com',
+                'DJANGO_SUPERUSER_PASSWORD': 'StrongRenderPass123',
+            },
+            clear=True,
+        ):
+            call_command('ensure_superuser', stdout=out)
+
+        user = User.objects.get(username='render-admin')
+        self.assertEqual(user.email, 'render-admin@example.com')
+        self.assertTrue(user.is_staff)
+        self.assertTrue(user.is_superuser)
+        self.assertTrue(user.check_password('StrongRenderPass123'))
+        self.assertIn('Superuser "render-admin" created', out.getvalue())
 
 
 class ProfileViewTests(TestCase):
